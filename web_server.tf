@@ -1,8 +1,5 @@
 provider "aws" {
   region     = "us-west-1"
-  assume_role {
-    role_arn = "arn:aws:iam::213265226177:user/maya"
-  }
 }
 
 # data "aws_secretsmanager_secret" "adminAWSAccount" {
