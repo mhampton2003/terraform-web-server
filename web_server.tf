@@ -1,5 +1,5 @@
 provider "aws" {
-  region     = "us-west-1"
+  region = "us-west-1"
 }
 
 # data "aws_secretsmanager_secret" "adminAWSAccount" {
@@ -22,7 +22,7 @@ provider "aws" {
 # }
 
 resource "aws_instance" "stored_creds" {
-  ami = "ami-032db79bb5052ca0f"
+  ami           = "ami-032db79bb5052ca0f"
   instance_type = "t3.micro"
   #subnet_id = aws_subnet.public_subnet.id
   #vpc_security_group_ids = [aws_security_group.web_access.id]
@@ -31,7 +31,7 @@ resource "aws_instance" "stored_creds" {
   tags = {
     Name = "stored_creds"
   }
-  
+
 }
 
 # resource "aws_vpc" "main" {
@@ -123,7 +123,7 @@ resource "aws_instance" "stored_creds" {
 #   tags = {
 #     Name = "terraform_web_server"
 #   }
-  
+
 # }
 
 # resource "aws_eip" "eip" {
