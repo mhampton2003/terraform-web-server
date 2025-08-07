@@ -1,4 +1,4 @@
-name: Terraform via OIDC
+name: Deploy Terraform via OIDC
 
 on:
   push:
@@ -40,7 +40,23 @@ jobs:
       run: terraform validate
 
     - name: Terraform Plan
-      run: terraform plan
+      run: terraform plan -out=plan.tfout
+
+    - name: Upload Terraform Plan
+      uses: actions/upload-artifact@v3
+      with:
+        name: terraform-plan
+        path: /plan.tfout
+
+    - name: Copy .terraform.lock.hcl to workspace
+      run: cp /.terraform.lock.hcl /home/runner/work/terraform-web-server/terraform-web-server/.terraform.lock.hcl
+
+    - name: Upload .terraform.lock.hcl
+      uses: actions/upload-artifact@v3
+      with:
+        name: terraform-workspace
+        path: /home/runner/work/terraform-web-server/terraform-web-server/.terraform.lock.hcl
+        include-hidden-files: true
 
   manual-approval:
     name: manual approval
@@ -82,10 +98,22 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::213265226177:role/GitHub_Actions
           aws-region: us-west-1
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-plan
+          path: / #add where you want to download the plan file
+
+      - name: Checkout workspace from previous job
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-workspace
+          path: / #add where you want to download the workspace file
   
       - name: Terraform Init
         run: terraform init
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve ./plan.tfout
