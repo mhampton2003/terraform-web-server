@@ -1,4 +1,4 @@
-name: Deploy Terraform via OIDC
+name: Deploy Terraform
 
 on:
   push:
@@ -102,6 +102,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan
+
+      - name: Show plan
+        run: terraform show -no-color plan.tfout
 
       - name: Download Terraform Lock File
         uses: actions/download-artifact@v4
