@@ -88,6 +88,17 @@ resource "aws_instance" "web_server" {
   vpc_security_group_ids = [aws_security_group.web_access.id]
   #associate_public_ip_address = true
 
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install httpd -y
+    service httpd start
+    chkconfig httpd on
+    cd /var/www/html
+    echo "<html><h1> HELLO AND WELCOME TO WEBIOSTE :D"</h1></html>
+    index.html
+  EOF
+
   tags = {
     Name = "terraform_web_server"
   }
