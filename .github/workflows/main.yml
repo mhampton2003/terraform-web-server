@@ -43,20 +43,19 @@ jobs:
       run: terraform plan -out=plan.tfout
 
     - name: Upload Terraform Plan
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: terraform-plan
         path: /plan.tfout
+        if-no-files-found: error
 
-    - name: Copy .terraform.lock.hcl to workspace
-      run: cp /.terraform.lock.hcl /home/runner/work/terraform-web-server/terraform-web-server/.terraform.lock.hcl
-
-    - name: Upload .terraform.lock.hcl
-      uses: actions/upload-artifact@v3
+    - name: Upload Terraform Lock File
+      uses: actions/upload-artifact@v4
       with:
-        name: terraform-workspace
-        path: /home/runner/work/terraform-web-server/terraform-web-server/.terraform.lock.hcl
+        name: terraform-lock
+        path: .terraform.lock.hcl
         include-hidden-files: true
+        if-no-files-found: ignore
 
   manual-approval:
     name: manual approval
@@ -100,16 +99,14 @@ jobs:
           aws-region: us-west-1
 
       - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: terraform-plan
-          path: / #add where you want to download the plan file
 
-      - name: Checkout workspace from previous job
-        uses: actions/download-artifact@v3
+      - name: Download Terraform Lock File
+        uses: actions/download-artifact@v4
         with:
-          name: terraform-workspace
-          path: / #add where you want to download the workspace file
+          name: terraform-lock
   
       - name: Terraform Init
         run: terraform init
