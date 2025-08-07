@@ -3,6 +3,8 @@ name: Terraform via OIDC
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '.github/workflows/destroy.yml'
   pull_request:
 
 permissions:
