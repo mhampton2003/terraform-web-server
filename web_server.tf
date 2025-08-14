@@ -103,7 +103,7 @@ resource "aws_instance" "web_server" {
     service httpd start
     chkconfig httpd on
     cd /var/www/html
-    echo "<html><h1> HELLO AND WELCOME TO WEBIOSTE :D"</h1></html>
+    echo "<html><h1> It works!"</h1></html>
     home.html
   EOF
 
