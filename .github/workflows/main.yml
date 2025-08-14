@@ -1,4 +1,4 @@
-name: Terraform via OIDC
+name: Deploy Terraform
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  terraform:
+  terraform-plan:
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -22,7 +22,7 @@ jobs:
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.8.0
+        terraform_version: 1.12.2
 
     - name: Configure AWS credentials via OIDC
       uses: aws-actions/configure-aws-credentials@v4
@@ -40,8 +40,77 @@ jobs:
       run: terraform validate
 
     - name: Terraform Plan
-      run: terraform plan -out=tfplan
+      run: terraform plan -out=plan.tfout
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve tfplan
+    - name: Upload Terraform Plan
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-plan
+        path: plan.tfout
+        if-no-files-found: error
+
+    - name: Upload Terraform Lock File
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-lock
+        path: .terraform.lock.hcl
+        include-hidden-files: true
+        if-no-files-found: ignore
+
+  manual-approval:
+    name: manual approval
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    if: success()
+
+    permissions:
+      issues: write
+      contents: read
+
+    steps: 
+      - name: Await for manual approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: mhampton2003 #add the usernames of the users who can approve the deployment
+          minimum-approvals: 1 #specify the number of approvals needed
+          issue-title: "Manual Approval Required for Terraform Apply"
+          issue-body: "Please approve or deny the deployment."
+          exclude-workflow-initiator-as-approver: false
+          
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: manual-approval
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+  
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2
+  
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::213265226177:role/GitHub_Actions
+          aws-region: us-west-1
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+
+      - name: Download Terraform Lock File
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-lock
+  
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve plan.tfout
