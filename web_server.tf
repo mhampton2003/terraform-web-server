@@ -119,6 +119,7 @@ resource "aws_eip" "eip" {
 
   tags = {
     Name = "elastic-ip"
+    
   }
 }
 
