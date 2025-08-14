@@ -21,7 +21,6 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "public_subnet" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.1.0/24"
-  # map_public_ip_on_launch = true
 
   tags = {
     Name = "Public Subnet"
@@ -64,13 +63,6 @@ resource "aws_security_group" "web_access" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
@@ -94,7 +86,6 @@ resource "aws_instance" "web_server" {
   instance_type          = "t3.micro"
   subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.web_access.id]
-  #associate_public_ip_address = true
 
   user_data = <<-EOF
     #!/bin/bash
